@@ -12,9 +12,9 @@ import java.io.File;
 
 public class Main extends Application {
 
-    private TextField directoryPathField;
-    private TextField searchField;
-    private TextArea resultArea; //nowanzmienna typu TextArea
+    private TextField directoryPathField; //pole txt do wprowadzenia ścieżki katalogu
+    private TextField searchField; //pole txt do wprowadzenia frazy wyszukiwania
+    private TextArea resultArea; // nowa prywatna zmienna typu TextArea do wyświetlania wyników
 
     @Override
     public void start(Stage primaryStage) {
@@ -26,18 +26,19 @@ public class Main extends Application {
         searchField = new TextField();
         searchField.setPromptText("Enter search phrase");
 
-        resultArea = new TextArea(); //nowa zmienna TextArea
-        resultArea.setPrefHeight(400); //ustawienie wysokości
+        resultArea = new TextArea(); 
+        resultArea.setPrefHeight(400);
 
         Button browseButton = new Button("Browse");
         browseButton.setOnAction(e -> browseDirectory());
 
         Button searchButton = new Button("Search");
+        searchButton.setOnAction(e -> searchFiles()); 
 
         HBox hBox = new HBox(10, directoryPathField, browseButton);
-        VBox vBox = new VBox(10, hBox, searchField, searchButton, resultArea); //+resultArea do VBox
+        VBox vBox = new VBox(10, hBox, searchField, searchButton, resultArea); 
 
-        Scene scene = new Scene(vBox, 600, 400); //wysokośc sceny do 400
+        Scene scene = new Scene(vBox, 600, 400); 
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -48,6 +49,36 @@ public class Main extends Application {
 
         if (selectedDirectory != null) {
             directoryPathField.setText(selectedDirectory.getAbsolutePath());
+        }
+    }
+
+    private void searchFiles() {
+        String directoryPath = directoryPathField.getText();
+        if (directoryPath.isEmpty()) { //sprawdzenie, czy ścieżka katalogu jest pusta
+            resultArea.setText("Please provide a directory path.");
+            return;
+        }
+
+        File directory = new File(directoryPath);
+        if (!directory.isDirectory()) { //sprawdzenie, czy podana ścieżka jest katalogiem
+            resultArea.setText("The provided path is not a directory.");
+            return;
+        }
+
+        StringBuilder results = new StringBuilder(); 
+        listFilesInDirectory(directory, results); 
+        resultArea.setText(results.toString()); 
+    }
+    private void listFilesInDirectory(File directory, StringBuilder results) {
+        File[] files = directory.listFiles(); 
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    results.append(file.getAbsolutePath()).append("\n"); 
+                } else if (file.isDirectory()) {
+                    listFilesInDirectory(file, results); 
+                }
+            }
         }
     }
 
