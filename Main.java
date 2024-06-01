@@ -8,7 +8,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class Main extends Application {
 
@@ -26,19 +29,25 @@ public class Main extends Application {
         searchField = new TextField();
         searchField.setPromptText("Enter search phrase");
 
-        resultArea = new TextArea(); 
+        resultArea = new TextArea();
         resultArea.setPrefHeight(400);
 
         Button browseButton = new Button("Browse");
-        browseButton.setOnAction(e -> browseDirectory());
+        browseButton.setOnAction(e -> {
+            System.out.println("Browse button clicked");
+            browseDirectory();
+        });
 
         Button searchButton = new Button("Search");
-        searchButton.setOnAction(e -> searchFiles()); 
+        searchButton.setOnAction(e -> {
+            System.out.println("Search button clicked");
+            searchFiles();
+        });
 
         HBox hBox = new HBox(10, directoryPathField, browseButton);
-        VBox vBox = new VBox(10, hBox, searchField, searchButton, resultArea); 
+        VBox vBox = new VBox(10, hBox, searchField, searchButton, resultArea);
 
-        Scene scene = new Scene(vBox, 600, 400); 
+        Scene scene = new Scene(vBox, 600, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -48,38 +57,57 @@ public class Main extends Application {
         File selectedDirectory = directoryChooser.showDialog(null);
 
         if (selectedDirectory != null) {
+            System.out.println("Selected directory: " + selectedDirectory.getAbsolutePath());
             directoryPathField.setText(selectedDirectory.getAbsolutePath());
         }
     }
-
     private void searchFiles() {
         String directoryPath = directoryPathField.getText();
-        if (directoryPath.isEmpty()) { //sprawdzenie, czy ścieżka katalogu jest pusta
+        if (directoryPath.isEmpty()) { 
             resultArea.setText("Please provide a directory path.");
             return;
         }
 
+        String searchPhrase = searchField.getText(); 
         File directory = new File(directoryPath);
-        if (!directory.isDirectory()) { //sprawdzenie, czy podana ścieżka jest katalogiem
+        if (!directory.isDirectory()) { //ckeck zy podana ścieżka jest katalogiem
             resultArea.setText("The provided path is not a directory.");
             return;
         }
 
-        StringBuilder results = new StringBuilder(); 
-        listFilesInDirectory(directory, results); 
+        StringBuilder results = new StringBuilder(); //utworzenie instancji StringBuilder do przechowywania wyników
+        searchInDirectory(directory, searchPhrase, results);
         resultArea.setText(results.toString()); 
     }
-    private void listFilesInDirectory(File directory, StringBuilder results) {
-        File[] files = directory.listFiles(); 
+
+    
+    private void searchInDirectory(File directory, String searchPhrase, StringBuilder results) {
+        File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
-                if (file.isFile()) {
-                    results.append(file.getAbsolutePath()).append("\n"); 
+                if (file.isFile() && containsPhrase(file, searchPhrase)) {
+                    results.append(file.getAbsolutePath()).append("\n");
                 } else if (file.isDirectory()) {
-                    listFilesInDirectory(file, results); 
+                    searchInDirectory(file, searchPhrase, results); 
                 }
             }
         }
+    }
+
+    //metoda sprawdzająca, czy plik zawiera wyszukiwaną frazę
+    private boolean containsPhrase(File file, String searchPhrase) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains(searchPhrase)) {
+                    return true; //true, jeśli linia zawiera wyszukiwaną frazę
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false; //blad-zwróć false
+        }
+        return false; 
     }
 
     public static void main(String[] args) {
