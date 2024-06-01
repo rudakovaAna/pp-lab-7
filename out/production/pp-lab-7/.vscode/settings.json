@@ -1,7 +1,6 @@
 {
     "java.configuration.runtimes": [],
     "java.project.referencedLibraries": [
-        "lib/**/*.jar",
         "/Users/anastasiarudakova/Desktop/javafx-sdk-22.0.1/lib/*.jar"
     ]
 }
